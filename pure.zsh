@@ -51,6 +51,51 @@ prompt_pure_cmd_exec_time() {
 	(($elapsed > ${PURE_CMD_MAX_EXEC_TIME:=5})) && prompt_pure_human_time $elapsed
 }
 
+if [[ "$PURE_HIGHLIGHT_REPO" == 1 ]] ; then
+
+	prompt_pure_set_preprompt() {
+		local pathdisplay
+		if [[ -n "$vcs_info_msg_1_" ]] ; then
+			local prerepo reponame postrepo
+			if [[ "$PWD" == "$vcs_info_msg_1_"* ]]; then
+				prerepo=${vcs_info_msg_1_%/*}
+				if [[ "$prerepo" == "$HOME"* ]]; then prerepo="~${prerepo#$HOME}" fi # replace ~
+				prerepo="${prerepo%/}/"
+				reponame=${vcs_info_msg_1_##*/}
+				postrepo="${PWD#$vcs_info_msg_1_}"
+				postrepo=${postrepo#/}
+				[[ -n "$postrepo" ]] && postrepo="/$postrepo"
+				# bold
+				# pathdisplay="%F{blue}$prerepo${fg_bold[blue]}$reponame/${fg_no_bold[blue]}$postrepo"
+				# underline
+				pathdisplay="%F{blue}$prerepo$(tput smul)$reponame$(tput rmul)$postrepo"
+			elif [[ "$PWD" == */"$vcs_info_msg_2_" ]]; then
+				local repopath="${PWD%/$vcs_info_msg_2_}"
+				reponame=${repopath##*/}
+				prerepo=${repopath%/*}
+				if [[ "$prerepo" == "$HOME"* ]]; then prerepo="~${prerepo#$HOME}" fi # replace ~
+				prerepo="${prerepo%/}/"
+				pathdisplay="%F{blue}$prerepo$(tput smul)$reponame$(tput rmul)/$vcs_info_msg_2_"
+			elif [[ "$vcs_info_msg_2_" == "." ]]; then
+				prerepo=${PWD%/*}
+				if [[ "$prerepo" == "$HOME"* ]]; then prerepo="~${prerepo#$HOME}" fi # replace ~
+				prerepo="${prerepo%/}/"
+				reponame=${PWD##*/}
+				pathdisplay="%F{blue}$prerepo$(tput smul)$reponame$(tput rmul)"
+			else
+				pathdisplay="%F{blue}%~"
+			fi
+		else
+			pathdisplay="%F{blue}%~"
+		fi
+		prompt_pure_preprompt="\n$pathdisplay%F{242}$vcs_info_msg_0_`prompt_pure_git_dirty`$prompt_pure_username%f%F{yellow}`prompt_pure_cmd_exec_time`%f"
+	}
+else
+	prompt_pure_set_preprompt() {
+		prompt_pure_preprompt="\n%F{blue}%~%F{242}$vcs_info_msg_0_`prompt_pure_git_dirty`$prompt_pure_username%f%F{yellow}`prompt_pure_cmd_exec_time`%f"
+	}
+fi
+
 prompt_pure_preexec() {
 	cmd_timestamp=$EPOCHSECONDS
 
@@ -73,7 +118,8 @@ prompt_pure_precmd() {
 	# git info
 	vcs_info
 
-	local prompt_pure_preprompt="\n%F{blue}%~%F{242}$vcs_info_msg_0_`prompt_pure_git_dirty`$prompt_pure_username%f%F{yellow}`prompt_pure_cmd_exec_time`%f"
+	local prompt_pure_preprompt
+	prompt_pure_set_preprompt
 	print -P $prompt_pure_preprompt
 
 	# check async if there is anything to pull
@@ -115,10 +161,11 @@ prompt_pure_setup() {
 	add-zsh-hook precmd prompt_pure_precmd
 	add-zsh-hook preexec prompt_pure_preexec
 
+	zstyle ':vcs_info:*' max-exports 3
 	zstyle ':vcs_info:*' enable git
 	zstyle ':vcs_info:*' use-simple true
-	zstyle ':vcs_info:git*' formats ' %b'
-	zstyle ':vcs_info:git*' actionformats ' %b|%a'
+	zstyle ':vcs_info:git*' formats ' %b' '%R' '%S'
+	zstyle ':vcs_info:git*' actionformats ' %b|%a' '%R' '%S'
 
 	# show username@host if logged in through SSH
 	[[ "$SSH_CONNECTION" != '' ]] && prompt_pure_username=' %n@%m'

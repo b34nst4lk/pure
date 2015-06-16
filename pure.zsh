@@ -52,7 +52,8 @@ prompt_pure_cmd_exec_time() {
 }
 
 if [[ "$PURE_HIGHLIGHT_REPO" == 1 ]] ; then
-
+	PURE_UNDERLINE_START="$(tput smul)"
+	PURE_UNDERLINE_END="$(tput rmul)"
 	prompt_pure_set_preprompt() {
 		local pathdisplay
 		if [[ -n "$vcs_info_msg_1_" ]] ; then
@@ -68,20 +69,20 @@ if [[ "$PURE_HIGHLIGHT_REPO" == 1 ]] ; then
 				# bold
 				# pathdisplay="%F{blue}$prerepo${fg_bold[blue]}$reponame/${fg_no_bold[blue]}$postrepo"
 				# underline
-				pathdisplay="%F{blue}$prerepo$(tput smul)$reponame$(tput rmul)$postrepo"
+				pathdisplay="%F{blue}$prerepo$PURE_UNDERLINE_START$reponame$PURE_UNDERLINE_END$postrepo"
 			elif [[ "$PWD" == */"$vcs_info_msg_2_" ]]; then
 				local repopath="${PWD%/$vcs_info_msg_2_}"
 				reponame=${repopath##*/}
 				prerepo=${repopath%/*}
 				if [[ "$prerepo" == "$HOME"* ]]; then prerepo="~${prerepo#$HOME}" fi # replace ~
 				prerepo="${prerepo%/}/"
-				pathdisplay="%F{blue}$prerepo$(tput smul)$reponame$(tput rmul)/$vcs_info_msg_2_"
+				pathdisplay="%F{blue}$prerepo$PURE_UNDERLINE_START$reponame$PURE_UNDERLINE_END/$vcs_info_msg_2_"
 			elif [[ "$vcs_info_msg_2_" == "." ]]; then
 				prerepo=${PWD%/*}
 				if [[ "$prerepo" == "$HOME"* ]]; then prerepo="~${prerepo#$HOME}" fi # replace ~
 				prerepo="${prerepo%/}/"
 				reponame=${PWD##*/}
-				pathdisplay="%F{blue}$prerepo$(tput smul)$reponame$(tput rmul)"
+				pathdisplay="%F{blue}$prerepo$PURE_UNDERLINE_START$reponame$PURE_UNDERLINE_END"
 			else
 				pathdisplay="%F{blue}%~"
 			fi

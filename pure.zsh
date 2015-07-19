@@ -48,37 +48,42 @@ prompt_pure_check_cmd_exec_time() {
 }
 
 if [[ "$PURE_HIGHLIGHT_REPO" == 1 ]] ; then
+	# underline
 	PURE_UNDERLINE_START="$(tput smul)"
 	PURE_UNDERLINE_END="$(tput rmul)"
+	# bold
+	# PURE_UNDERLINE_START=${fg_bold[blue]}
+	# PURE_UNDERLINE_END=${fg_no_bold[blue]}
 	prompt_pure_render_preprompt_path() {
 		if [[ -n "$vcs_info_msg_1_" ]] ; then
 			local prerepo reponame postrepo
 			if [[ "$PWD" == "$vcs_info_msg_1_"* ]]; then
+				# the working directory is the real path
 				prerepo=${vcs_info_msg_1_%/*}
 				if [[ "$prerepo" == "$HOME"* ]]; then prerepo="~${prerepo#$HOME}"; fi # replace ~
 				prerepo="${prerepo%/}/"
 				reponame=${vcs_info_msg_1_##*/}
 				postrepo="${PWD#$vcs_info_msg_1_}"
 				postrepo=${postrepo#/}
-				[[ -n "$postrepo" ]] && postrepo="/$postrepo"
-				# bold
-				# pathdisplay="%F{blue}$prerepo${fg_bold[blue]}$reponame/${fg_no_bold[blue]}$postrepo"
-				# underline
-				prompt_pure_preprompt_path="%F{blue}$prerepo$PURE_UNDERLINE_START$reponame$PURE_UNDERLINE_END$postrepo"
+				[[ -n "${postrepo}" ]] && postrepo="/${postrepo}"
+				prompt_pure_preprompt_path="%F{blue}${prerepo}${PURE_UNDERLINE_START}${reponame}${PURE_UNDERLINE_END}${postrepo}"
 			elif [[ "$PWD" == */"$vcs_info_msg_2_" ]]; then
+				# the working directory is in a git repository under a symlink
 				local repopath="${PWD%/$vcs_info_msg_2_}"
 				reponame=${repopath##*/}
 				prerepo=${repopath%/*}
-				if [[ "$prerepo" == "$HOME"* ]]; then prerepo="~${prerepo#$HOME}" fi # replace ~
+				if [[ "${prerepo}" == "$HOME"* ]]; then prerepo="~${prerepo#$HOME}" fi # replace ~
 				prerepo="${prerepo%/}/"
-				pathdisplay="%F{blue}$prerepo$PURE_UNDERLINE_START$reponame$PURE_UNDERLINE_END/$vcs_info_msg_2_"
+				prompt_pure_preprompt_path="%F{blue}${prerepo}${PURE_UNDERLINE_START}${reponame}${PURE_UNDERLINE_END}/$vcs_info_msg_2_"
 			elif [[ "$vcs_info_msg_2_" == "." ]]; then
+				# the working directory is at the root of a repo under a symlink
 				prerepo=${PWD%/*}
-				if [[ "$prerepo" == "$HOME"* ]]; then prerepo="~${prerepo#$HOME}" fi # replace ~
+				if [[ "${prerepo}" == "$HOME"* ]]; then prerepo="~${prerepo#$HOME}" fi # replace ~
 				prerepo="${prerepo%/}/"
 				reponame=${PWD##*/}
-				prompt_pure_preprompt_path="%F{blue}$prerepo$PURE_UNDERLINE_START$reponame$PURE_UNDERLINE_END"
+				prompt_pure_preprompt_path="%F{blue}${prerepo}${PURE_UNDERLINE_START}${reponame}${PURE_UNDERLINE_END}"
 			else
+				# fallback: the working directory symlinks into a repo somewhere else
 				prompt_pure_preprompt_path="%F{blue}%~"
 			fi
 		else

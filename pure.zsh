@@ -335,7 +335,7 @@ prompt_pure_setup() {
 	zstyle ':vcs_info:*' enable git
 	zstyle ':vcs_info:*' use-simple true
 	# raise max exports to 3 to also fetch path from the base of the repo
-	zstyle ':vcs_info:git*' max-exports 3
+	zstyle ':vcs_info:*' max-exports 3
 	# vcs_info_msg_0_ = ' %b' (for branch)
 	# vcs_info_msg_1_ = 'x%R' git top level (%R), x-prefix prevents creation of a named path (AUTO_NAME_DIRS)
 	# vcs_info_msg_2_ = '%S' relative path of current working directory from top level of repo

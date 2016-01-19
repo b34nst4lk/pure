@@ -2,7 +2,7 @@
 
 > Pretty, minimal and fast ZSH prompt
 
-![](screenshot.png)
+<img src="screenshot.png" width="550">
 
 
 ## Overview
@@ -150,6 +150,15 @@ Update your `.zshrc` file with the following two lines (order matters). Do not u
 ```
 antigen bundle mafredri/zsh-async
 antigen bundle sindresorhus/pure
+```
+
+### [antibody](https://github.com/getantibody/antibody)
+
+Update your `.zshrc` file with the following two lines (order matters):
+
+```
+antibody bundle mafredri/zsh-async
+antibody bundle sindresorhus/pure
 ```
 
 ## FAQ

@@ -141,6 +141,9 @@ prompt_pure_print_path() {
 }
 
 prompt_pure_preprompt_render() {
+	# make sure prompt_subst is unset to prevent parameter expansion in prompt
+	setopt local_options no_prompt_subst
+
 	# check that no command is currently running, the preprompt will otherwise be rendered in the wrong place
 	[[ -n ${prompt_pure_cmd_timestamp+x} && "$1" != "precmd" ]] && return
 

@@ -106,21 +106,22 @@ prompt_pure_string_length_to_var() {
 }
 
 prompt_pure_print_path() {
-   local upath='%~'
-   if [[ -n $vcs_info_msg_1_ ]]; then
-       # expand %~
-       upath=${(%)upath}
-       # remove git subdirectory from path to get "pretty" repo path
-       local repo=${upath%'/'$vcs_info_msg_2_}
-       if [[ $repo != $upath || $vcs_info_msg_2_ == '.' ]]; then
-           local parent="${repo:h}/"
-           # if parent is ./ we can safely remove it
-           local _repo="${parent#./}%B${repo:t}%b%F{blue}"
-           upath=${upath/$repo/$_repo}
-       fi
-   fi
+	local upath='%~'
 
-   print $upath
+	if [[ -n $prompt_pure_vcs_info[branch] ]]; then
+		# expand %~
+		upath=${(%)upath}
+		# remove git subdirectory from path to get "pretty" repo path
+		local repo=${upath%'/'$prompt_pure_vcs_info[relative_path]}
+		if [[ $repo != $upath || $prompt_pure_vcs_info[relative_path] == '.' ]]; then
+			local parent="${repo:h}/"
+			# if parent is ./ we can safely remove it
+			local _repo="${parent#./}%B${repo:t}%b%F{blue}"
+			upath=${upath/$repo/$_repo}
+		fi
+	fi
+
+	print $upath
 }
 
 prompt_pure_preprompt_render() {
@@ -246,6 +247,7 @@ prompt_pure_async_vcs_info() {
 	local -A info
 	info[top]=$vcs_info_msg_1_
 	info[branch]=$vcs_info_msg_0_
+	info[relative_path]=$vcs_info_msg_2_
 
 	print -r - ${(@kvq)info}
 }
@@ -313,6 +315,7 @@ prompt_pure_async_tasks() {
 		unset prompt_pure_git_fetch_pattern
 		prompt_pure_vcs_info[branch]=
 		prompt_pure_vcs_info[top]=
+		prompt_pure_vcs_info[relative_path]=
 	fi
 	unset MATCH
 
@@ -394,6 +397,7 @@ prompt_pure_async_callback() {
 			# always update branch and toplevel
 			prompt_pure_vcs_info[branch]=$info[branch]
 			prompt_pure_vcs_info[top]=$info[top]
+			prompt_pure_vcs_info[relative_path]=$info[relative_path]
 
 			prompt_pure_preprompt_render
 			;;

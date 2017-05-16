@@ -52,15 +52,6 @@ prompt_pure_check_cmd_exec_time() {
 	}
 }
 
-prompt_pure_clear_screen() {
-	# enable output to terminal
-	zle -I
-	# clear screen and move cursor to (0, 0)
-	print -n '\e[2J\e[0;0H'
-	# Redraw prompt.
-	zle .reset-prompt
-}
-
 prompt_pure_set_title() {
 	# emacs terminal does not support settings the title
 	(( ${+EMACS} )) && return
@@ -157,16 +148,23 @@ prompt_pure_preprompt_render() {
 	# Execution time.
 	[[ -n $prompt_pure_cmd_exec_time ]] && preprompt_parts+=('%F{yellow}${prompt_pure_cmd_exec_time}%f')
 
-	local -ah ps1
+	local cleaned_ps1=$PROMPT
+	local -H MATCH
+	if [[ $PROMPT = *$prompt_newline* ]]; then
+		# When the prompt contains newlines, we keep everything before the first
+		# and after the last newline, leaving us with everything except the
+		# preprompt. This is needed because some software prefixes the prompt
+		# (e.g. virtualenv).
+		cleaned_ps1=${PROMPT%%${prompt_newline}*}${PROMPT##*${prompt_newline}}
+	fi
 
-	# Construct the new prompt, containing preprompt.
-	PROMPT=${PROMPT//$prompt_newline/$'\n'}
-	ps1=(${(f)PROMPT})  # Split on newline.
+	# Construct the new prompt with a clean preprompt.
+	local -ah ps1
 	ps1=(
 		$prompt_newline           # Initial newline, for spaciousness.
 		${(j. .)preprompt_parts}  # Join parts, space separated.
 		$prompt_newline           # Separate preprompt and prompt.
-		$ps1[-1]                  # Keep last part of the prompt.
+		$cleaned_ps1
 	)
 
 	PROMPT="${(j..)ps1}"
@@ -470,13 +468,6 @@ prompt_pure_setup() {
 
 	add-zsh-hook precmd prompt_pure_precmd
 	add-zsh-hook preexec prompt_pure_preexec
-
-	# if the user has not registered a custom zle widget for clear-screen,
-	# override the builtin one so that the preprompt is displayed correctly when
-	# ^L is issued.
-	if [[ $widgets[clear-screen] == 'builtin' ]]; then
-		zle -N clear-screen prompt_pure_clear_screen
-	fi
 
 	# show username@host if logged in through SSH
 	[[ "$SSH_CONNECTION" != '' ]] && prompt_pure_username='%F{242}%n@%m%f'

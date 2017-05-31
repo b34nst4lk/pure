@@ -247,6 +247,7 @@ prompt_pure_async_vcs_info() {
 	vcs_info
 
 	local -A info
+	info[dir]=$PWD
 	info[top]=$vcs_info_msg_1_
 	info[branch]=$vcs_info_msg_0_
 	info[relative_path]=$vcs_info_msg_2_
@@ -396,10 +397,17 @@ prompt_pure_async_callback() {
 			# git directory, run the async refresh tasks
 			[[ -n $info[top] ]] && [[ -z $prompt_pure_vcs_info[top] ]] && prompt_pure_async_refresh
 
-			# always update branch and toplevel
-			prompt_pure_vcs_info[branch]=$info[branch]
-			prompt_pure_vcs_info[top]=$info[top]
-			prompt_pure_vcs_info[relative_path]=$info[relative_path]
+			# on some shell startups, this path can change between starting the job
+			# and finishing, before the prompt has been rendered once
+			if [[ $info[dir] = $PWD ]] ; then
+				# always update branch and toplevel
+				prompt_pure_vcs_info[branch]=$info[branch]
+				prompt_pure_vcs_info[top]=$info[top]
+				prompt_pure_vcs_info[relative_path]=$info[relative_path]
+			else
+				prompt_pure_vcs_info[pwd]=
+				prompt_pure_async_tasks
+			fi
 
 			prompt_pure_preprompt_render
 			;;

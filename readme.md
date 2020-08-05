@@ -37,35 +37,13 @@ That's it. Skip to [Getting started](#getting-started).
 
 ### Manually
 
-1. Either…
-  - Clone this repo
-  - add it as a submodule, or
-  - just download [`pure.zsh`](pure.zsh) and [`async.zsh`](async.zsh)
-
-2. Symlink `pure.zsh` to somewhere in [`$fpath`](https://www.refining-linux.org/archives/46-ZSH-Gem-12-Autoloading-functions.html) with the name `prompt_pure_setup`.
-
-3. Symlink `async.zsh` in `$fpath` with the name `async`.
-
-#### Example
-
-```console
-$ ln -s "$PWD/pure.zsh" /usr/local/share/zsh/site-functions/prompt_pure_setup
-$ ln -s "$PWD/async.zsh" /usr/local/share/zsh/site-functions/async
-```
-*Run `echo $fpath` to see possible locations.*
-
-For a user-specific installation (which would not require escalated privileges), simply add a directory to `$fpath` for that user:
+1. Clone this repo somewhere. Here we'll use `$HOME/.zsh/pure`.
+2. Add the path of the cloned repo to `$fpath` in `$HOME/.zshrc`.
 
 ```sh
-# .zshenv or .zshrc
-fpath=("$HOME/.zfunctions" $fpath)
-```
-
-Then install the theme there:
-
-```console
-$ ln -s "$PWD/pure.zsh" "$HOME/.zfunctions/prompt_pure_setup"
-$ ln -s "$PWD/async.zsh" "$HOME/.zfunctions/async"
+mkdir -p "$HOME/.zsh"
+git clone https://github.com/sindresorhus/pure.git "$HOME/.zsh/pure"
+fpath+=("$HOME/.zsh/pure")
 ```
 
 
@@ -102,10 +80,12 @@ As explained in ZSH's [manual](http://zsh.sourceforge.net/Doc/Release/Zsh-Line-E
 - `#` followed by an RGB triplet in hexadecimal format, for example `#424242`. Only if your terminal supports 24-bit colors (true color) or when the [`zsh/nearcolor` module](http://zsh.sourceforge.net/Doc/Release/Zsh-Modules.html#The-zsh_002fnearcolor-Module) is loaded.
 
 Colors can be changed by using [`zstyle`](http://zsh.sourceforge.net/Doc/Release/Zsh-Modules.html#The-zsh_002fzutil-Module) with a pattern of the form `:prompt:pure:$color_name` and style `color`. The color names, their default, and what part they affect are:
-- `exec_time` (yellow) - The execution time of the last command when exceeding `PURE_CMD_MAX_EXEC_TIME`.
+- `execution_time` (yellow) - The execution time of the last command when exceeding `PURE_CMD_MAX_EXEC_TIME`.
 - `git:arrow` (cyan) - For `PURE_GIT_UP_ARROW` and `PURE_GIT_DOWN_ARROW`.
 - `git:branch` (242) - The name of the current branch when in a Git repository.
 - `git:branch:cached` (red) - The name of the current branch when the data isn't fresh.
+- `git:action` (242) - The current action in progress (cherry-pick, rebase, etc.) when in a Git repository.
+- `git:dirty` (218) - The asterisk showing the branch is dirty.
 - `host` (242) - The hostname when on a remote machine.
 - `path` (blue) - The current path, for example, `PWD`.
 - `prompt:error` (red) - The `PURE_PROMPT_SYMBOL` when the previous command has *failed*.
@@ -117,17 +97,19 @@ Colors can be changed by using [`zstyle`](http://zsh.sourceforge.net/Doc/Release
 The following diagram shows where each color is applied on the prompt:
 
 ```
-path
-|          git:branch
-|          |       git:arrow
-|          |       |        host
-|          |       |        |
-~/dev/pure master* ⇡ zaphod@heartofgold  42s
-venv ❯               |                   |
-|    |               |                   exec_time
-|    |               user
-|    prompt
-virtualenv
+┌───────────────────────────────────────────── path
+│          ┌────────────────────────────────── git:branch
+│          │      ┌─────────────────────────── git:action
+|          |      |       ┌─────────────────── git:dirty
+│          │      │       │ ┌───────────────── git:arrow
+│          │      │       │ │        ┌──────── host
+│          │      │       │ │        │
+~/dev/pure master|rebase-i* ⇡ zaphod@heartofgold 42s
+venv ❯                        │                  │
+│    │                        │                  └───── execution_time
+│    │                        └──────────────────────── user
+│    └───────────────────────────────────────────────── prompt
+└────────────────────────────────────────────────────── virtualenv
 ```
 
 ### RGB colors

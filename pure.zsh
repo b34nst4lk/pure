@@ -313,7 +313,7 @@ prompt_pure_async_git_dirty() {
 	if [[ $untracked_dirty = 0 ]]; then
 		command git diff --no-ext-diff --quiet --exit-code
 	else
-		test -z "$(command git --no-optional-locks status --porcelain --ignore-submodules -u${untracked_git_mode})"
+		test -z "$(GIT_OPTIONAL_LOCKS=0 command git status --porcelain --ignore-submodules -u${untracked_git_mode})"
 	fi
 
 	return $?
@@ -322,19 +322,23 @@ prompt_pure_async_git_dirty() {
 prompt_pure_async_git_fetch() {
 	setopt localoptions noshwordsplit
 
+	local only_upstream=${1:-0}
+
 	# Sets `GIT_TERMINAL_PROMPT=0` to disable authentication prompt for Git fetch (Git 2.3+).
 	export GIT_TERMINAL_PROMPT=0
 	# Set SSH `BachMode` to disable all interactive SSH password prompting.
 	export GIT_SSH_COMMAND="${GIT_SSH_COMMAND:-"ssh"} -o BatchMode=yes"
 
-	local ref
-	ref=$(command git symbolic-ref -q HEAD)
 	local -a remote
-	remote=($(command git for-each-ref --format='%(upstream:remotename) %(refname)' $ref))
-
-	if [[ -z $remote[1] ]]; then
-		# No remote specified for this branch, skip fetch.
-		return 97
+	if ((only_upstream)); then
+		local ref
+		ref=$(command git symbolic-ref -q HEAD)
+		# Set remote to only fetch information for the current branch.
+		remote=($(command git for-each-ref --format='%(upstream:remotename) %(refname)' $ref))
+		if [[ -z $remote[1] ]]; then
+			# No remote specified for this branch, skip fetch.
+			return 97
+		fi
 	fi
 
 	# Default return code, which indicates Git fetch failure.
@@ -362,8 +366,8 @@ prompt_pure_async_git_fetch() {
 		fi
 	' CHLD
 
-	# Only fetch information for the current branch and avoid
-	# fetching tags or submodules to speed up the process.
+	# Do git fetch and avoid fetching tags or
+	# submodules to speed up the process.
 	command git -c gc.auto=0 fetch \
 		--quiet \
 		--no-tags \
@@ -461,8 +465,9 @@ prompt_pure_async_refresh() {
 
 	# Do not perform `git fetch` if it is disabled or in home folder.
 	if (( ${PURE_GIT_PULL:-1} )) && [[ $prompt_pure_vcs_info[top] != $HOME ]]; then
-		# Tell the async worker to do a `git fetch`.
-		async_job "prompt_pure" prompt_pure_async_git_fetch
+		zstyle -t :prompt:pure:git:fetch only_upstream
+		local only_upstream=$((? == 0))
+		async_job "prompt_pure" prompt_pure_async_git_fetch $only_upstream
 	fi
 
 	# If dirty checking is sufficiently fast,
@@ -711,25 +716,39 @@ prompt_pure_state_setup() {
 	# Show `username@host` if logged in through SSH.
 	[[ -n $ssh_connection ]] && username='%F{$prompt_pure_colors[user]}%n%f'"$hostname"
 
+	# Show `username@host` if inside a container.
+	prompt_pure_is_inside_container && username='%F{$prompt_pure_colors[user]}%n%f'"$hostname"
+
 	# Show `username@host` if root, with username in default color.
 	[[ $UID -eq 0 ]] && username='%F{$prompt_pure_colors[user:root]}%n%f'"$hostname"
 
 	typeset -gA prompt_pure_state
-	prompt_pure_state[version]="1.11.0"
+	prompt_pure_state[version]="1.13.0"
 	prompt_pure_state+=(
 		username "$username"
 		prompt	 "${PURE_PROMPT_SYMBOL:-❯}"
 	)
 }
 
+# Return true if executing inside a Docker or LXC container.
+prompt_pure_is_inside_container() {
+	local -r cgroup_file='/proc/1/cgroup'
+	[[ -r "$cgroup_file" && "$(< $cgroup_file)" = *(lxc|docker)* ]] \
+		|| [[ "$container" == "lxc" ]]
+}
+
 prompt_pure_system_report() {
 	setopt localoptions noshwordsplit
 
-	print - "- Zsh: $($SHELL --version) ($SHELL)"
+	local shell=$SHELL
+	if [[ -z $shell ]]; then
+		shell=$commands[zsh]
+	fi
+	print - "- Zsh: $($shell --version) ($shell)"
 	print -n - "- Operating system: "
 	case "$(uname -s)" in
 		Darwin)	print "$(sw_vers -productName) $(sw_vers -productVersion) ($(sw_vers -buildVersion))";;
-		*)	print "$(uname -s) ($(uname -v))";;
+		*)	print "$(uname -s) ($(uname -r) $(uname -v) $(uname -m) $(uname -o))";;
 	esac
 	print - "- Terminal program: ${TERM_PROGRAM:-unknown} (${TERM_PROGRAM_VERSION:-unknown})"
 	print -n - "- Tmux: "
@@ -741,10 +760,12 @@ prompt_pure_system_report() {
 
 	print - "- Pure state:"
 	for k v in "${(@kv)prompt_pure_state}"; do
-		print - "    - $k: \`${(q)v}\`"
+		print - "    - $k: \`${(q-)v}\`"
 	done
+	print - "- zsh-async version: \`${ASYNC_VERSION}\`"
 	print - "- PROMPT: \`$(typeset -p PROMPT)\`"
 	print - "- Colors: \`$(typeset -p prompt_pure_colors)\`"
+	print - "- TERM: \`$(typeset -p TERM)\`"
 	print - "- Virtualenv: \`$(typeset -p VIRTUAL_ENV_DISABLE_PROMPT)\`"
 	print - "- Conda: \`$(typeset -p CONDA_CHANGEPS1)\`"
 

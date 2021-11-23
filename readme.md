@@ -18,9 +18,29 @@
 		<sup>Special thanks to:</sup>
 		<br>
 		<br>
-		<a href="https://standardresume.co">
+		<br>
+		<a href="https://standardresume.co/tech">
 			<img src="https://sindresorhus.com/assets/thanks/standard-resume-logo.svg" width="200"/>
 		</a>
+		<br>
+		<br>
+		<br>
+		<a href="https://www.gitpod.io/?utm_campaign=sindresorhus&utm_medium=referral&utm_content=awesome&utm_source=github">
+			<div>
+				<img src="https://sindresorhus.com/assets/thanks/gitpod-logo-white-bg.svg" width="240" alt="Gitpod">
+			</div>
+			<b>Dev environments built for the cloud</b>
+			<div>
+				<sub>
+				Natively integrated with GitLab, GitHub, and Bitbucket, Gitpod automatically and continuously prebuilds dev
+				<br>
+				environments for all your branches. As a result team members can instantly start coding with fresh dev environments
+				<br>
+				for each new task - no matter if you are building a new feature, want to fix a bug, or work on a code review.
+				</sub>
+			</div>
+		</a>
+		<br>
 	</p>
 </div>
 
@@ -51,11 +71,17 @@ Can be installed with `npm` or manually. Requires Git 2.15.2+ and ZSH 5.2+. Olde
 
 ### npm
 
-```console
-$ npm install --global pure-prompt
+```sh
+npm install --global pure-prompt
 ```
 
 That's it. Skip to [Getting started](#getting-started).
+
+### [Homebrew](https://brew.sh)
+
+```sh
+brew install pure
+```
 
 ### Manually
 
@@ -105,6 +131,10 @@ Showing git stash status as part of the prompt is not activated by default. To a
 You can set Pure to only `git fetch` the upstream branch of the current local branch. In some cases, this can result in faster updates for Git arrows, but for most users, it's better to leave this setting disabled. You can enable it with:
 
 `zstyle :prompt:pure:git:fetch only_upstream yes`
+
+`nix-shell` integration adds the shell name to the prompt when used from within a nix shell. It is enabled by default, you can disable it with:
+
+`zstyle :prompt:pure:environment:nix-shell show no`
 
 ## Colors
 
@@ -213,24 +243,6 @@ Add `prompt pure` to your `~/.zpreztorc`.
 
 Add `zmodule sindresorhus/pure --source async.zsh --source pure.zsh` to your `.zimrc` and run `zimfw install`.
 
-### [antigen](https://github.com/zsh-users/antigen)
-
-Update your `.zshrc` file with the following two lines (order matters). Do not use the `antigen theme` function.
-
-```sh
-antigen bundle mafredri/zsh-async
-antigen bundle sindresorhus/pure
-```
-
-### [antibody](https://github.com/getantibody/antibody)
-
-Update your `.zshrc` file with the following two lines (order matters):
-
-```sh
-antibody bundle mafredri/zsh-async
-antibody bundle sindresorhus/pure
-```
-
 ### [zplug](https://github.com/zplug/zplug)
 
 Update your `.zshrc` file with the following two lines:
@@ -267,8 +279,7 @@ See [FAQ Archive](https://github.com/sindresorhus/pure/wiki/FAQ-Archive) for pre
 - **Bash**
 	- [sapegin/dotfiles](https://github.com/sapegin/dotfiles) - [Prompt](https://github.com/sapegin/dotfiles/blob/dd063f9c30de7d2234e8accdb5272a5cc0a3388b/includes/bash_prompt.bash) and [color theme](https://github.com/sapegin/dotfiles/tree/master/color) for Terminal.app.
 - **Fish**
-	- [brandonweiss/pure.fish](https://github.com/brandonweiss/pure.fish) - Pure-inspired prompt for Fish. Not intended to have feature parity.
-	- [rafaelrinaldi/pure](https://github.com/rafaelrinaldi/pure) - Support for bare Fish and various framework ([Oh-My-Fish](https://github.com//oh-my-fish/oh-my-fish), [Fisherman](https://github.com//fisherman/fisherman), and [Wahoo](https://github.com//bucaran/wahoo)).
+	- [pure-fish/pure](https://github.com/pure-fish/pure) - Fully tested Fish port aiming for feature parity.
 - **Rust**
 	- [xcambar/purs](https://github.com/xcambar/purs) - Pure-inspired prompt in Rust.
 - **Go**

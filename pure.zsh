@@ -173,6 +173,11 @@ prompt_pure_preprompt_render() {
 	if [[ -n $prompt_pure_git_stash ]]; then
 		preprompt_parts+=('%F{$prompt_pure_colors[git:stash]}${PURE_GIT_STASH_SYMBOL:-≡}%f')
 	fi
+    # Kubernetes context.
+    if [[ -n $(command -v kubectl) ]]; then
+        kubernetes_context=$(kubectl config current-context)
+		preprompt_parts+=('%F{$prompt_pure_colors[kubernetes_context]}${kubernetes_context}%f')
+	fi
 
 	# Execution time.
 	[[ -n $prompt_pure_cmd_exec_time ]] && preprompt_parts+=('%F{$prompt_pure_colors[execution_time]}${prompt_pure_cmd_exec_time}%f')
